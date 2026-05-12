@@ -1,0 +1,25 @@
+# Core
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+gunicorn==22.0.0
+
+# Database
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+alembic==1.13.2
+
+# Validation
+pydantic==2.9.2
+
+# Configuration
+python-decouple==3.8
+
+# Logging
+python-json-logger==2.0.7
+
+# Testing
+pytest==8.3.3
+httpx==0.27.2
+
+# Linting
+flake8==7.1.1

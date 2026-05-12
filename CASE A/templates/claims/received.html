@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Claims Received — FindIt{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
+  <h1 class="text-xl font-bold text-slate-800 mb-6">📥 Claims Received</h1>
+
+  {% if claims %}
+    <div class="flex flex-col gap-4">
+      {% for claim in claims %}
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        <!-- Item info -->
+        <div class="flex items-center gap-3 mb-4">
+          <a href="{% url 'items:detail' claim.item.pk %}">
+            <img src="{{ claim.item.image_url }}" alt="{{ claim.item.title }}"
+                 class="w-12 h-12 rounded-xl object-cover" />
+          </a>
+          <div>
+            <a href="{% url 'items:detail' claim.item.pk %}"
+               class="font-semibold text-slate-800 text-sm hover:text-brand-600 transition">
+              {{ claim.item.title }}
+            </a>
+            <p class="text-xs text-slate-500">{{ claim.item.get_category_display }} · {{ claim.item.location|truncatechars:30 }}</p>
+          </div>
+          <!-- Status badge -->
+          <span class="ml-auto text-xs font-bold px-3 py-1 rounded-full
+            {% if claim.status == 'PENDING' %}bg-yellow-50 text-yellow-700
+            {% elif claim.status == 'APPROVED' %}bg-green-50 text-green-700
+            {% else %}bg-red-50 text-red-600{% endif %}">
+            {{ claim.status }}
+          </span>
+        </div>
+
+        <!-- Claimant info -->
+        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+          <img src="{{ claim.claimant.avatar_url }}" alt="" class="w-8 h-8 rounded-full flex-shrink-0" />
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700">{{ claim.claimant.get_full_name|default:claim.claimant.username }}</p>
+            <p class="text-xs text-slate-400 mb-1">{{ claim.created_at|timesince }} ago</p>
+            <p class="text-sm text-slate-600 italic">"{{ claim.message }}"</p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        {% if claim.status == 'PENDING' %}
+          <div class="flex gap-3 mt-4">
+            <form method="post" action="{% url 'claims:approve' claim.pk %}" class="flex-1">
+              {% csrf_token %}
+              <button type="submit"
+                      class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                ✅ Approve
+              </button>
+            </form>
+            <form method="post" action="{% url 'claims:reject' claim.pk %}" class="flex-1">
+              {% csrf_token %}
+              <button type="submit"
+                      class="w-full border border-red-200 hover:bg-red-50 text-red-600 font-bold py-2.5 rounded-xl transition text-sm">
+                ❌ Reject
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-20">
+      <div class="text-5xl mb-4">📭</div>
+      <p class="text-slate-500 font-medium">No claims received yet.</p>
+      <p class="text-slate-400 text-sm mt-1">When someone claims your item, it'll appear here.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

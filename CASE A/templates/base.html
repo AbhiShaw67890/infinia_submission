@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}FindIt — Campus Lost & Found{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}FindIt helps campus students report and recover lost items quickly.{% endblock %}" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn .35s ease-out',
+            'slide-up': 'slideUp .35s ease-out',
+          },
+          keyframes: {
+            fadeIn:  { from: { opacity: 0 }, to: { opacity: 1 } },
+            slideUp: { from: { opacity: 0, transform: 'translateY(16px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts — Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Heroicons CDN (outline) -->
+  <script src="https://unpkg.com/@heroicons/v2/dist/heroicons.js" defer></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .card-hover { transition: transform .2s ease, box-shadow .2s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(99,102,241,.12); }
+    .btn-primary {
+      @apply inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 active:bg-brand-700
+             text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm;
+    }
+    .btn-secondary {
+      @apply inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50
+             text-slate-700 font-medium px-5 py-2.5 rounded-xl transition-all duration-200;
+    }
+    /* Toast slide animation */
+    @keyframes toastIn { from { opacity:0; transform:translateY(-8px) } to { opacity:1; transform:translateY(0) } }
+    .toast { animation: toastIn .3s ease-out; }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- ═══════════════════════ TOP NAV ═══════════════════════ -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="{% url 'items:feed' %}" class="flex items-center gap-2 font-bold text-lg text-brand-600 tracking-tight">
+        <span class="text-2xl">📍</span> FindIt
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-1">
+        <a href="{% url 'items:feed' %}?type=LOST"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">Lost</a>
+        <a href="{% url 'items:feed' %}?type=FOUND"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">Found</a>
+        <a href="{% url 'items:search' %}"
+           class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">Search</a>
+      </nav>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-2">
+        {% if user.is_authenticated %}
+          <a href="{% url 'items:create' %}"
+             class="hidden sm:inline-flex items-center gap-1 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
+            + Post Item
+          </a>
+          <!-- Avatar dropdown -->
+          <div class="relative group">
+            <button class="flex items-center gap-2 focus:outline-none">
+              <img src="{{ user.avatar_url }}" alt="{{ user.username }}"
+                   class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-100" />
+            </button>
+            <div class="absolute right-0 mt-1 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl
+                        opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div class="px-4 py-3 border-b border-slate-50">
+                <p class="text-sm font-semibold text-slate-800">{{ user.username }}</p>
+                <p class="text-xs text-slate-400">{{ user.email }}</p>
+              </div>
+              <div class="p-1.5 flex flex-col">
+                <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50">👤 My Profile</a>
+                <a href="{% url 'items:my_posts' %}"   class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50">📋 My Posts</a>
+                <a href="{% url 'claims:received' %}"  class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50">📥 Claims Received</a>
+                <a href="{% url 'claims:sent' %}"      class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50">📤 Claims Sent</a>
+                <hr class="my-1 border-slate-100"/>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 text-left">🚪 Logout</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}"  class="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition">Login</a>
+          <a href="{% url 'accounts:signup' %}" class="text-sm font-semibold bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl transition">Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════ TOAST MESSAGES ═══════════════════════ -->
+  {% if messages %}
+  <div class="fixed top-16 right-4 z-50 flex flex-col gap-2" id="toast-container">
+    {% for message in messages %}
+    <div class="toast flex items-center gap-3 bg-white border border-slate-100 shadow-lg rounded-2xl px-4 py-3 min-w-64 max-w-sm"
+         role="alert">
+      {% if message.tags == 'green' or 'success' in message.tags %}
+        <span class="text-green-500 text-lg">✅</span>
+      {% elif message.tags == 'red' or 'error' in message.tags %}
+        <span class="text-red-500 text-lg">❌</span>
+      {% elif message.tags == 'yellow' or 'warning' in message.tags %}
+        <span class="text-yellow-500 text-lg">⚠️</span>
+      {% else %}
+        <span class="text-blue-500 text-lg">ℹ️</span>
+      {% endif %}
+      <p class="text-sm text-slate-700 font-medium">{{ message }}</p>
+      <button onclick="this.parentElement.remove()" class="ml-auto text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    // Auto-dismiss toasts after 4s
+    setTimeout(() => {
+      document.querySelectorAll('#toast-container > div').forEach(el => {
+        el.style.transition = 'opacity .4s';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+  </script>
+  {% endif %}
+
+  <!-- ═══════════════════════ PAGE CONTENT ═══════════════════════ -->
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ═══════════════════════ MOBILE BOTTOM NAV ═══════════════════════ -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-slate-100 z-50">
+    <div class="flex items-center justify-around h-16">
+      <a href="{% url 'items:feed' %}" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-brand-600 transition text-xs font-medium">
+        <span class="text-xl">🏠</span>Feed
+      </a>
+      <a href="{% url 'items:search' %}" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-brand-600 transition text-xs font-medium">
+        <span class="text-xl">🔍</span>Search
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'items:create' %}" class="flex flex-col items-center gap-0.5 bg-brand-500 text-white rounded-2xl px-4 py-2 -mt-4 shadow-lg text-xs font-semibold">
+        <span class="text-xl">＋</span>Post
+      </a>
+      <a href="{% url 'claims:received' %}" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-brand-600 transition text-xs font-medium">
+        <span class="text-xl">📥</span>Claims
+      </a>
+      <a href="{% url 'accounts:profile' %}" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-brand-600 transition text-xs font-medium">
+        <img src="{{ user.avatar_url }}" class="w-6 h-6 rounded-full" alt="" />Profile
+      </a>
+      {% else %}
+      <a href="{% url 'accounts:login' %}" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-brand-600 transition text-xs font-medium">
+        <span class="text-xl">🔐</span>Login
+      </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Spacer for bottom nav on mobile -->
+  <div class="h-16 md:hidden"></div>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

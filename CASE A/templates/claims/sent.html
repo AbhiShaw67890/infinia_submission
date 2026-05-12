@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Claims Sent — FindIt{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
+  <h1 class="text-xl font-bold text-slate-800 mb-6">📤 Claims Sent</h1>
+
+  {% if claims %}
+    <div class="flex flex-col gap-4">
+      {% for claim in claims %}
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <a href="{% url 'items:detail' claim.item.pk %}">
+            <img src="{{ claim.item.image_url }}" alt="{{ claim.item.title }}"
+                 class="w-12 h-12 rounded-xl object-cover" />
+          </a>
+          <div class="flex-1 min-w-0">
+            <a href="{% url 'items:detail' claim.item.pk %}"
+               class="font-semibold text-slate-800 text-sm hover:text-brand-600 transition block truncate">
+              {{ claim.item.title }}
+            </a>
+            <p class="text-xs text-slate-500">Posted by @{{ claim.item.posted_by.username }}</p>
+            <p class="text-xs text-slate-400">{{ claim.created_at|timesince }} ago</p>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0
+            {% if claim.status == 'PENDING' %}bg-yellow-50 text-yellow-700
+            {% elif claim.status == 'APPROVED' %}bg-green-50 text-green-700
+            {% else %}bg-red-50 text-red-600{% endif %}">
+            {% if claim.status == 'PENDING' %}⏳ Pending
+            {% elif claim.status == 'APPROVED' %}✅ Approved
+            {% else %}❌ Rejected{% endif %}
+          </span>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-sm text-slate-600 italic">"{{ claim.message }}"</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-20">
+      <div class="text-5xl mb-4">📤</div>
+      <p class="text-slate-500 font-medium">You haven't claimed any items yet.</p>
+      <a href="{% url 'items:feed' %}" class="text-brand-600 text-sm hover:underline mt-2 inline-block">Browse the feed →</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

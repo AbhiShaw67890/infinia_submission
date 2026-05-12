@@ -1,0 +1,17 @@
+.venv
+venv
+__pycache__
+*.pyc
+.git
+.gitignore
+.env
+README.md
+RUNBOOK.md
+credential.md
+.github
+tests
+docker-compose.yml
+.pytest_cache
+.coverage
+htmlcov
+*.md
